@@ -522,8 +522,14 @@ export class GameService {
           for (const call of intent.calls) if (!allowed.includes(call.name)) context.addIssue({ code: 'custom', path: ['calls'], message: `${call.name} is unavailable now` });
           if (combat && intent.calls.length !== 1) context.addIssue({ code: 'custom', path: ['calls'], message: 'Combat requires exactly one main action' });
         });
+        const playerVisible = visibleContext(state, player, decision);
         const intent = await gateway.structured('cultivator', playerIntentPrompt({
-          rawCommand, player: record(player), visibleState: visibleContext(state, player, decision).visibleWorld, allowedTools: allowed,
+          rawCommand,
+          player: record(player),
+          currentEvent: record(decision),
+          visibleState: playerVisible.visibleWorld,
+          visibleActors: playerVisible.visibleActors,
+          allowedTools: allowed,
         }), intentSchema, { gameId, source: 'player', actorId: player.id, requestType: 'PlayerIntent' });
 
         const playerDraft = this.#validatePlayer(state, player, intent.calls);
