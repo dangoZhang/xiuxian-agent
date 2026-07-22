@@ -16,7 +16,7 @@ const step = ref<'model' | 'origin'>('model')
   <main v-else class="gateway">
     <header class="gateway-header">
       <h1>修仙agent</h1>
-      <p>天道定规则 · 命运生事件 · 你用一句话行动 · 修士并行决策</p>
+      <p>以时间为轴，按需循环，天道-命运-玩家-修士</p>
     </header>
     <nav class="steps" aria-label="开局步骤">
       <span :class="{ active: step === 'model', done: modelReady }">1 模型</span>
