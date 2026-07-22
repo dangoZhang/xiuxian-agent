@@ -1,6 +1,7 @@
 import { mkdirSync } from 'node:fs';
+import { createRequire } from 'node:module';
 import { dirname } from 'node:path';
-import { DatabaseSync } from 'node:sqlite';
+import type { DatabaseSync as NodeDatabaseSync } from 'node:sqlite';
 import {
   chronicleEntrySchema,
   gameStateSchema,
@@ -11,7 +12,8 @@ import {
 } from '@xiuxian/protocol';
 import { AppError } from './errors.js';
 
-type Db = Pick<DatabaseSync, 'exec' | 'prepare' | 'close'>;
+const { DatabaseSync } = createRequire(import.meta.url)('node:sqlite') as typeof import('node:sqlite');
+type Db = Pick<NodeDatabaseSync, 'exec' | 'prepare' | 'close'>;
 
 export class GameRepository {
   readonly #db: Db;

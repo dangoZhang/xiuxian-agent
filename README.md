@@ -57,6 +57,8 @@ pnpm dev
 
 打开 `http://localhost:5173`，填写 Base URL、API Key、模型名称和并发上限。三项能力校验通过后才能开局。API Key 只存在于当前浏览器内存与服务端会话内存，不写入存档或浏览器存储。
 
+模型会话默认 12 小时有效；服务重启或会话过期后，存档仍在，重新填写模型配置即可继续。
+
 ## 使用 LiteLLM
 
 ```bash
@@ -81,7 +83,8 @@ pnpm build
 ## 安全
 
 - 不要把 API Key 写入 `.env.example`、存档、日志或 Git。
-- 公网部署必须使用 HTTPS，并限制服务端访问范围。
+- 远程模型端点与公网部署必须使用 HTTPS；HTTP 只用于本机或可信内网。
+- 公网部署需在服务前增加鉴权，并限制服务端访问范围。
 - LiteLLM master key 只保留在服务端。
 
 ## License
