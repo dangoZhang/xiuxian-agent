@@ -7,14 +7,13 @@ const HEAVEN_SYSTEM = `你是「天道」。你只能生成受限的 HeavenRuleS
 规则应让炼气至金丹的人生可玩，寿元、因果、伤势、突破与天劫都有可追溯的代价。`;
 
 export function heavenRuleSetPrompt(input: {
-  readonly backstory: string;
   readonly world: JsonRecord;
   readonly registry: JsonRecord;
   readonly ruleVersion: number;
 }): PromptEnvelope {
   return {
     system: HEAVEN_SYSTEM,
-    prompt: `为本局生成第 ${input.ruleVersion} 版规则。\n\n身世：\n${input.backstory}\n\n世界：\n${promptJson(input.world)}\n\n允许的 DSL 注册表：\n${promptJson(input.registry)}`,
+    prompt: `为这个已生成的世界制定第 ${input.ruleVersion} 版规则。\n\n世界：\n${promptJson(input.world)}\n\n允许的 DSL 注册表：\n${promptJson(input.registry)}`,
   };
 }
 

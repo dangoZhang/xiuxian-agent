@@ -446,13 +446,12 @@ export class GameService {
 
   get(id: string): GameState { return this.repository.get(id); }
 
-  async create(sessionId: string, backstory: string): Promise<GameState> {
-    if (!backstory.trim()) throw new AppError('SAVE_SCHEMA_INVALID', '身世不能为空', 400);
+  async create(sessionId: string): Promise<GameState> {
     const session = this.sessions.get(sessionId);
     const gameId = randomUUID();
     const gateway = this.#gateway(session.config);
 
-    const world = await gateway.structured('heaven', worldGenesisPrompt(backstory), semanticWorldSchema(), {
+    const world = await gateway.structured('heaven', worldGenesisPrompt(), semanticWorldSchema(), {
       gameId, source: 'heaven', actorId: null, requestType: 'WorldGenesis',
     });
     const routes = ['剑', '丹', '阵', '魔'] as const;
@@ -472,7 +471,7 @@ export class GameService {
     if (!genesisPlayer) throw new AppError('MODEL_OUTPUT_INVALID', '人物生成结果缺少主角', 422);
 
     const rawRules = await gateway.structured('heaven', heavenRuleSetPrompt({
-      backstory, world: record(worldState), registry: record(DSL_REGISTRY), ruleVersion: 1,
+      world: record(worldState), registry: record(DSL_REGISTRY), ruleVersion: 1,
     }), playableRuleSchema(genesisPlayer.stats.qiMax), { gameId, source: 'heaven', actorId: null, requestType: 'HeavenRuleSet' });
     const rules = withContentHash(rawRules);
     let initial = createInitialGameState({ id: gameId, engineVersion: ENGINE_VERSION, randomSeed: randomUUID(), rules, world: worldState });
@@ -610,11 +609,16 @@ export class GameService {
           const timeEntryId = randomUUID();
           const elapsed = elapsedTimeEvents(base, event.day, [timeEntryId]);
           if (elapsed.length > 0) {
+            const timeCauses = filterKnownCauses(base, event.causeIds);
+            const timeText = await gateway.narrative('narration', narrationPrompt({
+              source: 'heaven', viewpointName: firstPlayer(base).name, settledFacts: records(elapsed),
+              causes: records(base.chronicle.filter(({ id }) => timeCauses.includes(id))), visibleState: record(base.world),
+            }), { gameId, source: 'heaven', actorId: null, requestType: 'TimePassageNarration' });
             const timeEntry: ChronicleEntry = {
               id: timeEntryId,
               day: event.day, phase: 'resolve', sequence: base.sequence + 1, source: 'heaven', kind: 'event',
-              actorIds: Object.keys(base.world.cultivators), causeIds: filterKnownCauses(base, event.causeIds), visibility: ['public'],
-              text: `道历流转 ${event.day - base.world.day} 日，寿元随之消减。`,
+              actorIds: Object.keys(base.world.cultivators), causeIds: timeCauses, visibility: ['public'],
+              text: timeText,
               structuredPayload: json({ domainEvents: elapsed }), cost: { sense: 0, qi: 0 },
             };
             entries.push(timeEntry);

@@ -33,6 +33,7 @@ export {
 } from './actions.js';
 export {
   chronicleEntrySchema as ChronicleEntrySchema,
+  createGameRequestSchema as CreateGameRequestSchema,
   gameStateSchema as GameStateSchema,
   queueEventSchema as QueueEventSchema,
   saveFileSchema as SaveFileSchema,

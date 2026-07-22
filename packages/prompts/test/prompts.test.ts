@@ -1,7 +1,18 @@
 import { describe, expect, it } from 'vitest';
-import { cultivatorTurnPrompt, narrationPrompt, playerIntentPrompt, promptJson } from '../src/index.js';
+import { cultivatorTurnPrompt, heavenRuleSetPrompt, narrationPrompt, playerIntentPrompt, promptJson, worldGenesisPrompt } from '../src/index.js';
 
 describe('prompt boundaries', () => {
+  it('lets the model create the protagonist, world and opening without a backstory', () => {
+    const world = worldGenesisPrompt();
+    expect(world.system).toContain('自主创造');
+    expect(world.prompt).toContain('从空白开始');
+    expect(world.prompt).not.toContain('身世原文');
+
+    const heaven = heavenRuleSetPrompt({ world: { name: '自生世界' }, registry: {}, ruleVersion: 1 });
+    expect(heaven.prompt).toContain('自生世界');
+    expect(heaven.prompt).not.toContain('身世：');
+  });
+
   it('removes known secret fields before interpolation', () => {
     expect(promptJson({ name: '玄离', apiKey: 'secret', hiddenGoal: '杀人' })).toBe('{\n  "name": "玄离"\n}');
   });

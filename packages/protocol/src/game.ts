@@ -3,6 +3,10 @@ import { chronicleKindSchema, endingSchema, gameStatusSchema, phaseSchema, sourc
 import { heavenRuleSetSchema } from './rules.js';
 import { worldStateSchema } from './world.js';
 
+export const createGameRequestSchema = z.object({
+  sessionId: z.string().min(1),
+});
+
 export const chronicleEntrySchema = z.object({
   id: z.string().min(1),
   day: z.number().int().nonnegative(),
@@ -66,6 +70,7 @@ export const saveFileSchema = z.object({
 });
 
 export type ChronicleEntry = z.infer<typeof chronicleEntrySchema>;
+export type CreateGameRequest = z.infer<typeof createGameRequestSchema>;
 export type QueueEvent = z.infer<typeof queueEventSchema>;
 export type PrivateMemory = z.infer<typeof privateMemorySchema>;
 export type GameState = z.infer<typeof gameStateSchema>;

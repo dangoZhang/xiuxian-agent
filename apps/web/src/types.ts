@@ -7,11 +7,6 @@ export interface ModelConfig {
   apiKey: string
   model: string
   maxConcurrency: number
-  roleModels?: {
-    heaven?: string | undefined
-    fate?: string | undefined
-    cultivator?: string | undefined
-  } | undefined
 }
 
 export interface CapabilityResult {
@@ -73,18 +68,6 @@ export interface Cultivator {
   relations?: Relation[]
   plan?: string
   isPlayer?: boolean
-}
-
-export interface RunningCall {
-  callId: string
-  source: Source
-  actorId?: string | undefined
-  actorName?: string | undefined
-  sequence: number
-  state: 'queued' | 'running' | 'tool'
-  tool?: string | undefined
-  senseCost?: number | undefined
-  startedAt: number
 }
 
 export interface GameProjection {

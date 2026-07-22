@@ -37,16 +37,10 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 }
 
 function toWireConfig(config: ModelConfig) {
-  const endpoint = { baseUrl: config.baseUrl, apiKey: config.apiKey, model: config.model }
-  const roleEndpoint = (model?: string) => model ? { ...endpoint, model } : undefined
   return {
-    default: endpoint,
+    default: { baseUrl: config.baseUrl, apiKey: config.apiKey, model: config.model },
     maxConcurrency: config.maxConcurrency,
-    roles: Object.fromEntries(Object.entries({
-      heaven: roleEndpoint(config.roleModels?.heaven),
-      fate: roleEndpoint(config.roleModels?.fate),
-      cultivator: roleEndpoint(config.roleModels?.cultivator),
-    }).filter((entry) => Boolean(entry[1]))),
+    roles: {},
   }
 }
 
@@ -142,10 +136,10 @@ export function useGameApi() {
       }
     },
 
-    async createGame(sessionId: string, origin: string): Promise<GameProjection> {
+    async createGame(sessionId: string): Promise<GameProjection> {
       return normalizeGame(await request('/api/games', {
         method: 'POST',
-        body: JSON.stringify({ sessionId, origin, background: origin }),
+        body: JSON.stringify({ sessionId }),
       }))
     },
 
@@ -177,31 +171,6 @@ export function useGameApi() {
 
     async retry(gameId: string): Promise<GameProjection | null> {
       return this.advance(gameId)
-    },
-
-    async exportGame(gameId: string): Promise<void> {
-      const response = await fetch(`/api/games/${encodeURIComponent(gameId)}/export`)
-      if (!response.ok) throw new ApiError('导出存档失败。', response.status)
-      const blob = await response.blob()
-      const url = URL.createObjectURL(blob)
-      const link = document.createElement('a')
-      link.href = url
-      link.download = `修仙agent-${gameId}.json`
-      link.click()
-      URL.revokeObjectURL(url)
-    },
-
-    async importGame(file: File, sessionId: string): Promise<GameProjection> {
-      let save: unknown
-      try {
-        save = JSON.parse(await file.text())
-      } catch {
-        throw new ApiError('存档不是有效的 JSON 文件。')
-      }
-      return normalizeGame(await request('/api/games/import', {
-        method: 'POST',
-        body: JSON.stringify({ save, sessionId }),
-      }))
     },
 
     subscribe(gameId: string, onEvent: (event: StreamEnvelope) => void, onError: () => void): () => void {

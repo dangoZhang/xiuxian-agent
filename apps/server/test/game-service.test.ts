@@ -6,12 +6,59 @@ import { ModelGateway } from '../src/model/gateway.js';
 import { GameRepository } from '../src/repository.js';
 import { SessionStore } from '../src/session-store.js';
 import { AppError } from '../src/errors.js';
-import { gameState } from './fixtures.js';
+import { cultivator, gameState, rules } from './fixtures.js';
 
 const cultivate: ToolCall = { id: 'cultivate', name: 'cultivate', arguments: { method: '引气剑诀' } };
 
 describe('game completion rules', () => {
   afterEach(() => vi.restoreAllMocks());
+  it('lets the configured model generate the protagonist, world and opening', async () => {
+    const repository = new GameRepository(':memory:');
+    const sessions = new SessionStore(60_000);
+    const session = sessions.create({
+      default: { baseUrl: 'https://example.com/v1', apiKey: 'memory-only', model: 'model' }, maxConcurrency: 2, roles: {},
+    });
+    const locations = [
+      { id: 'mountain', name: '照骨山', region: '东境', adjacentIds: ['valley'], tags: ['山'] },
+      { id: 'valley', name: '无声谷', region: '南境', adjacentIds: ['mountain', 'lake'], tags: ['谷'] },
+      { id: 'lake', name: '沉星湖', region: '西境', adjacentIds: ['valley'], tags: ['湖'] },
+    ];
+    const characterSlots = ['player', 'c1', 'c2', 'c3', 'c4', 'c5', 'c6'].map((id, index) => ({
+      id, role: index === 0 ? '误入禁地的主角' : `自主修士${index}`, locationId: locations[index % locations.length]!.id,
+    }));
+    vi.spyOn(ModelGateway.prototype, 'structured').mockImplementation(async (_role, _envelope, _schema, context) => {
+      if (context.requestType === 'WorldGenesis') return {
+        name: '照骨界', premise: '飞升路断，众生争渡', locations,
+        sects: [
+          { id: 'sword-sect', name: '悬剑门', locationId: 'mountain', route: '剑' },
+          { id: 'pill-sect', name: '长生炉', locationId: 'lake', route: '丹' },
+        ],
+        characterSlots,
+      } as never;
+      if (context.requestType === 'CultivatorProfile') {
+        const slot = characterSlots.find(({ id }) => id === context.actorId)!;
+        return { ...cultivator(slot.id, slot.id === 'player'), locationId: slot.locationId } as never;
+      }
+      if (context.requestType === 'HeavenRuleSet') return rules as never;
+      if (context.requestType === 'FateEventProposal') return {
+        id: 'opening', title: '禁地闻钟', trigger: { type: 'immediate', causeIds: [] }, participantIds: ['player'],
+        locationId: 'mountain', perceptionRadius: 0, risk: 0.3, deadlineDay: null,
+        stakes: '回应钟声或循血迹离开', candidateConsequences: ['循声入山', '沿血迹离开'],
+      } as never;
+      throw new Error(`Unexpected request ${context.requestType}`);
+    });
+    vi.spyOn(ModelGateway.prototype, 'narrative').mockResolvedValue('暮色压山，第一声钟自禁地深处传来。');
+    const service = new GameService(repository, sessions, new GameEventBus(), 2_000, 2);
+
+    const created = await service.create(session.id);
+
+    expect(created.status).toBe('awaiting_player');
+    expect(created.world).toMatchObject({ name: '照骨界', premise: '飞升路断，众生争渡' });
+    expect(created.world.cultivators.player).toMatchObject({ isPlayer: true });
+    expect(created.chronicle.at(-1)?.text).toBe('暮色压山，第一声钟自禁地深处传来。');
+    repository.close();
+  });
+
   it('progresses to Golden Core and then produces a model-independent settled ending fact', () => {
     const foundation = gameState({ playerStats: { realm: '筑基', qi: 100 } });
     expect(deriveProgressionEvents(foundation, foundation.world.cultivators.player!, [cultivate], []))
@@ -123,6 +170,8 @@ describe('game completion rules', () => {
     expect(result.world.cultivators.player?.stats.realm).toBe('筑基');
     expect(result.queue.some(({ type }) => type === 'decision')).toBe(true);
     expect(result.chronicle.some(({ source }) => source === 'fate')).toBe(true);
+    expect(result.chronicle.find(({ day, source, kind }) => day === 3 && source === 'heaven' && kind === 'event')?.text)
+      .toBe('灵气入体，远处又有传音而来。');
     expect(result.chronicle.some(({ structuredPayload }) => structuredPayload && typeof structuredPayload === 'object' && 'proposalId' in structuredPayload)).toBe(true);
     repository.close();
   });

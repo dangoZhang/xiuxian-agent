@@ -2,7 +2,7 @@ import { extname, resolve, sep } from 'node:path';
 import { readFile } from 'node:fs/promises';
 import { Hono } from 'hono';
 import { z, ZodError } from 'zod';
-import { modelConfigSchema } from '@xiuxian/protocol';
+import { createGameRequestSchema, modelConfigSchema } from '@xiuxian/protocol';
 import type { ServerConfig } from './config.js';
 import { AppError, errorBody, statusOf } from './errors.js';
 import { encodeSse, GameEventBus } from './events.js';
@@ -16,13 +16,6 @@ const modelBodySchema = z.object({
   modelConfig: modelConfigSchema.optional(),
 }).superRefine((value, context) => {
   if (!value.config && !value.modelConfig) context.addIssue({ code: 'custom', message: 'modelConfig is required' });
-});
-const createGameSchema = z.object({
-  sessionId: z.string().min(1),
-  origin: z.string().min(1).optional(),
-  background: z.string().min(1).optional(),
-}).superRefine((value, context) => {
-  if (!value.origin && !value.background) context.addIssue({ code: 'custom', message: 'origin is required' });
 });
 const commandSchema = z.object({
   text: z.string().min(1).max(8000).optional(),
@@ -82,8 +75,8 @@ export function createApp(dependencies: AppDependencies) {
   });
 
   app.post('/api/games', async (context) => {
-    const body = createGameSchema.parse(await context.req.json());
-    const game = await games.create(body.sessionId, body.origin ?? body.background ?? '');
+    const body = createGameRequestSchema.parse(await context.req.json());
+    const game = await games.create(body.sessionId);
     return context.json({ game }, 201);
   });
 

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  createGameRequestSchema,
   gameStateSchema,
   heavenRuleSetSchema,
   modelConfigSchema,
@@ -9,6 +10,13 @@ import {
 } from './index.js';
 
 describe('protocol schemas', () => {
+  it('creates a game from a model session alone and tolerates legacy fields', () => {
+    expect(createGameRequestSchema.parse({ sessionId: 'session' })).toEqual({ sessionId: 'session' });
+    expect(createGameRequestSchema.parse({ sessionId: 'session', origin: '旧身世' })).toEqual({ sessionId: 'session' });
+    expect(createGameRequestSchema.parse({ sessionId: 'session', background: '旧背景' })).toEqual({ sessionId: 'session' });
+    expect(createGameRequestSchema.safeParse({ origin: '旧身世' }).success).toBe(false);
+  });
+
   it('rejects unsupported sources and DSL operations', () => {
     expect(sourceSchema.safeParse('battle').success).toBe(false);
     expect(heavenRuleSetSchema.safeParse({
