@@ -1,0 +1,36 @@
+services:
+  xiuxian-agent:
+    build:
+      context: .
+    ports:
+      - "127.0.0.1:8787:8787"
+    environment:
+      PORT: 8787
+      HOST: 0.0.0.0
+      DATABASE_PATH: /app/data/xiuxian.sqlite
+      WEB_DIST_PATH: /app/apps/web/dist
+      MAX_AGENT_CONCURRENCY: ${MAX_AGENT_CONCURRENCY:-3}
+    volumes:
+      - xiuxian_data:/app/data
+    restart: unless-stopped
+
+  litellm:
+    build:
+      context: ./vendor/litellm
+      dockerfile: Dockerfile
+    image: xiuxian-agent-litellm:1.92.0
+    profiles: ["litellm"]
+    command: ["--config", "/app/config.yaml", "--port", "4000"]
+    ports:
+      - "127.0.0.1:4000:4000"
+    environment:
+      LITELLM_MASTER_KEY: ${LITELLM_MASTER_KEY:-change-me}
+      LITELLM_UPSTREAM_MODEL: ${LITELLM_UPSTREAM_MODEL:-openai/your-model}
+      LITELLM_UPSTREAM_BASE_URL: ${LITELLM_UPSTREAM_BASE_URL:-https://api.example.com/v1}
+      LITELLM_UPSTREAM_API_KEY: ${LITELLM_UPSTREAM_API_KEY:-change-me}
+    volumes:
+      - ./litellm.config.example.yaml:/app/config.yaml:ro
+    restart: unless-stopped
+
+volumes:
+  xiuxian_data:
