@@ -13,7 +13,7 @@ const { game, error } = storeToRefs(store)
   <main v-else class="gateway">
     <header class="gateway-header">
       <h1>修仙agent</h1>
-      <p>天道定规则 · 命运生事件 · 你用一句话行动 · 修士并行决策。</p>
+      <p>以时间为轴，按需循环，天道-命运-玩家-修士</p>
     </header>
     <section class="setup-sheet">
       <div v-if="error" class="setup-error" role="alert">
