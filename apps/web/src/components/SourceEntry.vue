@@ -11,10 +11,10 @@ const props = defineProps<{
 const emit = defineEmits<{ select: [id: string] }>()
 
 const sourceMeta = {
-  heaven: { mark: '天道', title: '天道诏令' },
-  fate: { mark: '命运', title: '命运谶语' },
-  player: { mark: '我', title: '玩家原话' },
-  cultivator: { mark: '修士', title: '修士行止' },
+  heaven: { title: '天道' },
+  fate: { title: '命运' },
+  player: { title: '我' },
+  cultivator: { title: '修士' },
 } as const
 
 const actors = computed(() => props.entry.actorIds
@@ -40,53 +40,41 @@ const dateText = computed(() => {
     :data-source="entry.source"
     :data-kind="entry.kind"
     :aria-label="`${heading}，${dateText}`"
-    @click="emit('select', entry.id)"
   >
-    <span class="source-mark" aria-hidden="true">{{ sourceMeta[entry.source].mark }}</span>
     <header class="entry-head">
-      <div>
-        <span v-if="entry.source === 'fate'" class="hexagram" aria-hidden="true">☷ ☲</span>
-        <strong>{{ heading }}</strong>
-      </div>
-      <time>{{ dateText }} · {{ entry.phase }}</time>
+      <button type="button" class="entry-title" @click="emit('select', entry.id)">{{ heading }}</button>
+      <time>{{ dateText }}</time>
     </header>
-    <div v-if="entry.kind === 'combat'" class="combat-ribbon">战局 · 已结算事实</div>
+    <strong v-if="entry.kind === 'combat'" class="combat-label">战斗结算</strong>
     <p class="entry-text">{{ entry.text }}</p>
     <footer v-if="entry.cost.sense || entry.cost.qi || entry.causeIds.length" class="entry-foot">
       <span v-if="entry.cost.sense">神识 −{{ entry.cost.sense }}</span>
       <span v-if="entry.cost.qi">灵力 −{{ entry.cost.qi }}</span>
-      <button v-if="entry.causeIds.length" type="button" @click.stop="emit('select', entry.id)">
-        追溯 {{ entry.causeIds.length }} 段因果
+      <button v-if="entry.causeIds.length" type="button" @click="emit('select', entry.causeIds[0]!)">
+        回看因果 {{ entry.causeIds.length }}
       </button>
     </footer>
   </article>
 </template>
 
 <style scoped>
-.source-entry { position: relative; margin: 0 0 1.35rem; padding: 1.15rem 1.2rem 1.05rem 3.35rem; cursor: default; transition: background 150ms, border-color 150ms; }
-.source-entry.selected { background: color-mix(in srgb, var(--gold) 5%, transparent); }
-.source-mark { position: absolute; left: 0.75rem; top: 1rem; width: 1.5rem; color: currentColor; font: 0.82rem/1 var(--font-serif); text-align: center; writing-mode: vertical-rl; letter-spacing: 0.16em; }
-.entry-head { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; margin-bottom: 0.75rem; }
-.entry-head strong { font: 600 0.82rem/1.4 var(--font-serif); letter-spacing: 0.13em; }
-.entry-head time { flex: none; color: var(--ink-faint); font: 0.62rem/1.2 var(--font-ui); letter-spacing: 0.05em; }
-.hexagram { margin-right: 0.55rem; font-size: 0.76rem; }
-.entry-text { margin: 0; color: var(--paper-ink); white-space: pre-wrap; font: 1rem/2 var(--font-serif); letter-spacing: 0.035em; }
-.entry-foot { display: flex; flex-wrap: wrap; align-items: center; gap: 0.8rem; margin-top: 0.85rem; color: currentColor; font: 0.65rem var(--font-ui); opacity: 0.75; }
+.source-entry { position: relative; margin: 0 0 1.5rem; padding: 1rem; color: var(--text); cursor: default; }
+.source-entry.selected { background: #f4f4f0; }
+.entry-head { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; margin-bottom: 0.7rem; }
+.entry-title { min-height: 2rem; border: 0; background: transparent; color: currentColor; padding: 0; font: 600 0.82rem/1.4 var(--font-ui); text-align: left; cursor: pointer; }
+.entry-head time { flex: none; color: var(--faint); font-size: 0.68rem; }
+.entry-text { margin: 0; color: var(--text); overflow-wrap: anywhere; white-space: pre-wrap; font: 1.04rem/1.9 var(--font-serif); }
+.entry-foot { display: flex; flex-wrap: wrap; align-items: center; gap: 0.8rem; margin-top: 0.8rem; color: var(--muted); font-size: 0.68rem; }
 .entry-foot button { border: 0; border-bottom: 1px solid currentColor; background: transparent; color: inherit; padding: 0.15rem 0; cursor: pointer; }
-.source--heaven { color: var(--gold); border: 3px double var(--gold-dim); background: color-mix(in srgb, var(--gold) 4%, transparent); }
-.source--heaven .entry-text { font-weight: 600; letter-spacing: 0.09em; }
-.source--fate { color: var(--fate-bright); border: 1px dashed var(--fate); background: color-mix(in srgb, var(--fate) 7%, transparent); }
-.source--fate::after { content: ''; position: absolute; inset: 5px; pointer-events: none; border: 1px dashed color-mix(in srgb, var(--fate) 35%, transparent); }
-.source--player { color: var(--jade-bright); border: 1px solid var(--jade); border-left: 4px solid var(--jade-bright); background: color-mix(in srgb, var(--jade) 7%, transparent); }
-.source--player .entry-text { font-size: 1.04rem; }
-.source--cultivator { color: var(--ink-soft); border: 1px solid var(--line); border-left: 2px solid var(--ink-soft); }
-.kind--combat { border-color: var(--cinnabar); box-shadow: inset 3px 0 var(--cinnabar), inset -2px -2px color-mix(in srgb, var(--cinnabar) 45%, transparent); }
-.kind--combat::before { content: ''; position: absolute; right: -1px; top: 40%; width: 16px; border-top: 5px solid var(--night); transform: rotate(-35deg); }
-.combat-ribbon { display: inline-block; margin: 0 0 0.65rem; border: 1px solid var(--cinnabar); background: color-mix(in srgb, var(--cinnabar) 13%, transparent); color: var(--cinnabar-bright); padding: 0.23rem 0.55rem; font: 0.66rem var(--font-ui); letter-spacing: 0.14em; }
-.compact { margin: 0; padding: 0.8rem 0.8rem 0.8rem 2.5rem; }
+.source--heaven { color: var(--heaven); border-block: 2px solid currentColor; }.source--heaven .entry-title { margin-inline: auto; }.source--heaven .entry-text { font-weight: 600; }
+.source--fate { color: var(--fate); border: 1px dashed currentColor; }
+.source--player { color: var(--player); border-left: 3px solid currentColor; background: #f5f8f7; }
+.source--cultivator { color: var(--muted); border-top: 1px solid var(--line); }
+.kind--combat { border: 2px solid var(--battle); }
+.combat-label { display: block; margin: 0 0 0.55rem; color: var(--battle); font-size: 0.72rem; }
+.compact { margin: 0; padding: 0.55rem 0.5rem; }
 .compact .entry-head { display: block; margin: 0; }
 .compact .entry-head time { display: block; margin-top: 0.25rem; }
-.compact .entry-text, .compact .entry-foot, .compact .combat-ribbon { display: none; }
-.compact .source-mark { left: 0.55rem; top: 0.7rem; }
-@media (max-width: 620px) { .source-entry { padding-right: 0.9rem; padding-left: 2.8rem; } .entry-head { display: block; } .entry-head time { display: block; margin-top: 0.3rem; } }
+.compact .entry-text, .compact .entry-foot, .compact .combat-label { display: none; }
+@media (max-width: 620px) { .source-entry { padding: 0.85rem; } .entry-head { display: block; } .entry-head time { display: block; margin-top: 0.15rem; } }
 </style>

@@ -51,16 +51,8 @@ async function test() {
 
 <template>
   <form class="model-form" @submit.prevent="test">
-    <div class="form-heading">
-      <span class="step-number">壹</span>
-      <div>
-        <p class="eyebrow">立契 · MODEL COVENANT</p>
-        <h2>接引大模型</h2>
-      </div>
-    </div>
-    <p class="form-intro">
-      天道、命运与众修皆由此端点生念。密钥仅送往本地服务进程，不写入浏览器存储与存档。
-    </p>
+    <h2>模型</h2>
+    <p class="form-intro">需要结构化输出、工具调用和流式文本。密钥只保留在本次服务会话中。</p>
 
     <label class="field">
       <span>Base URL</span>
@@ -71,7 +63,7 @@ async function test() {
       <span class="secret-field">
         <input v-model="form.apiKey" :type="showKey ? 'text' : 'password'" autocomplete="off" required placeholder="sk-…" />
         <button type="button" class="text-button" :aria-label="showKey ? '隐藏密钥' : '显示密钥'" @click="showKey = !showKey">
-          {{ showKey ? '隐' : '显' }}
+          {{ showKey ? '隐藏' : '显示' }}
         </button>
       </span>
     </label>
@@ -87,8 +79,8 @@ async function test() {
     </div>
 
     <button type="button" class="advanced-toggle" :aria-expanded="advanced" @click="advanced = !advanced">
-      <span>{{ advanced ? '收起' : '展开' }}分路模型</span>
-      <span aria-hidden="true">{{ advanced ? '−' : '＋' }}</span>
+      <span>分路模型</span>
+      <span aria-hidden="true">{{ advanced ? '收起' : '设置' }}</span>
     </button>
     <div v-if="advanced" class="advanced-grid">
       <label class="field"><span>天道模型</span><input v-model="form.roleModels!.heaven" :placeholder="form.model || '同主模型'" /></label>
@@ -103,34 +95,29 @@ async function test() {
     </div>
 
     <button class="primary-button model-submit" type="submit" :disabled="!complete || store.testing">
-      <span>{{ store.testing ? '正在叩问模型…' : store.modelReady ? '已通过三重验证' : '验证模型并立契' }}</span>
-      <span aria-hidden="true">→</span>
+      <span>{{ store.testing ? '验证中…' : store.modelReady ? '验证通过' : '验证并继续' }}</span>
     </button>
   </form>
 </template>
 
 <style scoped>
 .model-form { width: 100%; min-width: 0; }
-.form-heading { display: flex; align-items: center; gap: 1rem; }
-.step-number { display: grid; width: 2.75rem; height: 2.75rem; place-items: center; border: 1px solid var(--gold-dim); color: var(--gold); font: 1.15rem var(--font-serif); transform: rotate(-2deg); }
-.form-heading h2 { margin: 0.12rem 0 0; color: var(--paper); font: 500 clamp(1.5rem, 4vw, 2rem)/1.15 var(--font-serif); letter-spacing: 0.1em; }
-.eyebrow { margin: 0; color: var(--gold); font: 0.66rem var(--font-ui); letter-spacing: 0.2em; }
-.form-intro { max-width: 35rem; margin: 1.25rem 0 1.5rem 3.8rem; color: var(--ink-muted); font: 0.88rem/1.8 var(--font-serif); }
-.field { display: grid; gap: 0.45rem; margin-top: 1rem; color: var(--ink-muted); font: 0.7rem var(--font-ui); letter-spacing: 0.1em; }
-.field input { width: 100%; border: 0; border-bottom: 1px solid var(--line); border-radius: 0; outline: none; background: color-mix(in srgb, var(--night-2) 88%, transparent); color: var(--paper); padding: 0.78rem 0.75rem; font: 0.9rem var(--font-ui); transition: border-color 150ms, background 150ms; }
-.field input:focus { border-color: var(--gold); background: var(--night-2); box-shadow: 0 2px 0 color-mix(in srgb, var(--gold) 20%, transparent); }
+h2 { margin: 0; font: 600 1.35rem/1.3 var(--font-ui); }
+.form-intro { margin: 0.5rem 0 1.75rem; color: var(--muted); font-size: 0.78rem; line-height: 1.6; }
+.field { display: grid; gap: 0.45rem; margin-top: 1rem; color: var(--muted); font-size: 0.78rem; }
+.field input { width: 100%; min-height: 2.8rem; border: 1px solid var(--line-strong); border-radius: 0; background: var(--surface); color: var(--text); padding: 0.65rem 0.75rem; font-size: 0.88rem; }
+.field input:focus { border-color: var(--text); }
 .field-row { display: flex; gap: 1rem; }
 .field--grow { flex: 1; }
 .field--narrow { width: 8.5rem; }
 .secret-field { position: relative; display: block; }
 .secret-field input { padding-right: 3rem; }
-.text-button { position: absolute; right: 0; inset-block: 0; width: 2.7rem; border: 0; background: transparent; color: var(--gold); cursor: pointer; }
-.advanced-toggle { display: flex; width: 100%; justify-content: space-between; margin-top: 1.2rem; padding: 0.65rem 0; border: 0; border-top: 1px solid var(--line-faint); background: transparent; color: var(--ink-muted); font: 0.72rem var(--font-ui); letter-spacing: 0.1em; cursor: pointer; }
+.text-button { position: absolute; right: 0; inset-block: 0; width: 3.5rem; border: 0; background: transparent; color: var(--muted); font-size: 0.75rem; cursor: pointer; }
+.advanced-toggle { display: flex; width: 100%; min-height: 2.75rem; align-items: center; justify-content: space-between; margin-top: 1.25rem; padding: 0; border: 0; border-block: 1px solid var(--line); background: transparent; color: var(--muted); font-size: 0.78rem; cursor: pointer; }
 .advanced-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.75rem; }
-.capabilities { display: flex; flex-wrap: wrap; gap: 1.25rem; margin: 1.4rem 0; padding: 1rem 0; border-block: 1px solid var(--line-faint); }
+.capabilities { display: flex; flex-wrap: wrap; gap: 1rem; margin: 1.25rem 0; color: var(--muted); }
 .model-submit { width: 100%; }
 @media (max-width: 640px) {
-  .form-intro { margin-left: 0; }
   .field-row { display: grid; }
   .field--narrow { width: auto; }
   .advanced-grid { grid-template-columns: 1fr; }

@@ -18,25 +18,15 @@ function callName(call: RunningCall) {
 
 <template>
   <div v-if="running.length || disconnected" class="calls-strip" :class="{ disconnected }" aria-live="polite">
-    <div class="call-line" aria-hidden="true" />
-    <span v-if="disconnected" class="stream-state">神念流已断，正在等待重连</span>
-    <div v-for="(call, index) in running" :key="call.callId" class="mind" :style="{ '--index': index }">
-      <span class="mind-orb" aria-hidden="true" />
-      <span class="mind-name">{{ callName(call) }}</span>
-      <span class="mind-state">{{ call.state === 'tool' ? `调用 · ${call.tool ?? '工具'}` : '推演中' }}</span>
-    </div>
+    <strong>神识并行 {{ running.length }}</strong>
+    <span v-if="disconnected" class="stream-state">连接中断，等待重连</span>
+    <span v-for="call in running" :key="call.callId" class="mind">
+      {{ callName(call) }}：{{ call.state === 'tool' ? `调用 ${call.tool ?? '工具'}` : '推演中' }}
+    </span>
   </div>
 </template>
 
 <style scoped>
-.calls-strip { position: relative; display: flex; min-height: 3.3rem; align-items: center; gap: 1.5rem; padding: 0.45rem 1rem; overflow-x: auto; border-block: 1px solid var(--line-faint); background: color-mix(in srgb, var(--jade) 3%, var(--night)); }
-.call-line { position: absolute; left: 0; right: 0; top: 1.15rem; border-top: 1px dashed var(--jade-dim); }
-.mind { position: relative; z-index: 1; display: grid; grid-template-columns: 1rem auto; grid-template-areas: 'orb name' 'orb state'; column-gap: 0.45rem; min-width: max-content; color: var(--jade-bright); animation: arrive 330ms ease-out both; animation-delay: calc(var(--index) * 80ms); }
-.mind-orb { grid-area: orb; align-self: start; width: 0.8rem; height: 0.8rem; margin-top: 0.06rem; border: 1px solid var(--jade-bright); border-radius: 50%; background: var(--night); box-shadow: 0 0 9px var(--jade); animation: pulse 1.2s ease-in-out infinite; }
-.mind-name { grid-area: name; font: 0.68rem var(--font-serif); letter-spacing: 0.08em; }
-.mind-state { grid-area: state; color: var(--ink-faint); font: 0.57rem var(--font-ui); }
-.stream-state { position: relative; z-index: 1; color: var(--cinnabar-bright); font: 0.65rem var(--font-ui); }
-@keyframes arrive { from { opacity: 0; transform: translateX(-0.8rem); } }
-@keyframes pulse { 50% { transform: scale(0.7); opacity: 0.55; } }
-@media (prefers-reduced-motion: reduce) { .mind, .mind-orb { animation: none; } }
+.calls-strip { display: flex; min-height: 2.5rem; align-items: center; gap: 1rem; padding: 0.4rem 1rem; overflow-x: auto; border-bottom: 1px solid var(--line); background: var(--canvas); color: var(--muted); font-size: 0.72rem; white-space: nowrap; }
+.calls-strip strong { color: var(--text); font-size: inherit; }.mind { border-left: 1px solid var(--line-strong); padding-left: 1rem; }.stream-state { color: var(--battle); }
 </style>
